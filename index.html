@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My AI Search</title>
+ <style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+    padding: 40px;
+  }
+
+  .container {
+    max-width: 750px;
+    margin: auto;
+    background: #020617;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  }
+
+  h2 {
+    margin-bottom: 15px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 90px;
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: #020617;
+    color: #e5e7eb;
+  }
+
+  button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+  }
+
+  button:hover {
+    background: #1d4ed8;
+  }
+
+  .answer {
+    margin-top: 25px;
+    line-height: 1.6;
+  }
+
+  .sources {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #94a3b8;
+  }
+
+  a {
+    color: #60a5fa;
+    text-decoration: none;
+  }
+  
+  .chat-message {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .user {
+    background: #1e293b;
+    text-align: right;
+  }
+
+  .ai {
+    background: #020617;
+    border-left: 4px solid #2563eb;
+  }
+
+  .sources {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+
+</style>
+
+</head>
+
+<body>
+  <div class="container">
+    <h2>🔍 My AI Search</h2>
+
+    <textarea id="question" placeholder="Ask anything..."></textarea>
+    <br>
+    <button onclick="askAI()">Ask</button>
+
+    <div id="chat"></div>
+    
+  </div>
+
+  <script>
+   
+  async function askAI() {
+    const question = document.getElementById("question").value;
+    const chat = document.getElementById("chat");
+
+    if (!question.trim()) return;
+
+    // User message
+    chat.innerHTML += `
+      <div class="chat-message user">
+        <b>You:</b><br>${question}
+      </div>
+    `;
+
+    document.getElementById("question").value = "";
+
+    // Thinking message
+    const thinkingId = Date.now();
+    chat.innerHTML += `
+      <div class="chat-message ai" id="${thinkingId}">
+        🔍 Searching & thinking...
+      </div>
+    `;
+
+    const response = await fetch("http://127.0.0.1:8000/ask", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ question })
+    });
+
+    const data = await response.json();
+
+    // Build sources HTML
+    let sourcesHTML = "<div class='sources'><b>Sources:</b><br>";
+    data.sources.forEach((src, i) => {
+      sourcesHTML += `[${i + 1}] <a href="${src}" target="_blank">${src}</a><br>`;
+    });
+    sourcesHTML += "</div>";
+
+    // Replace thinking message with answer
+    document.getElementById(thinkingId).innerHTML = `
+      <b>AI:</b><br>${data.answer}
+      ${sourcesHTML}
+    `;
+
+    // Auto scroll
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+
+  </script>
+</body>
+</html>
